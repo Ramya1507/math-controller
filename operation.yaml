@@ -1,0 +1,9 @@
+apiVersion:  maths.tatacommunications.com/v1alpha1
+kind: Arithmeticoperation
+metadata:
+  name: addition
+  namespace: default
+spec:
+  firstNum: 8
+  secondNum: 9
+  operation: add

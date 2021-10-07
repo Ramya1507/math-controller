@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"controller/pkg/apis/arithmeticop/v1alpha1"
 	"flag"
+	"log"
 	"path/filepath"
 
 	api_v1 "k8s.io/api/core/v1"
@@ -15,23 +17,56 @@ import (
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
+
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 )
 
+var kubeconfig string
 func main() {
-	var kubeconfig *string
+
+	var config *rest.Config
+	var err error
 	//var master string
 
 	home := homedir.HomeDir()
 
-	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+    kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 
-
+	//flag.StringVar(&kubeconfig, "kubeconfig", "", "path to Kubernetes config file")
+	//flag.Parse()
 
 	// creates the connection
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 
+
+	/*if kubeconfig == "" {
+		log.Printf("using in-cluster configuration")
+		config, err = rest.InClusterConfig()
+	} else {
+		log.Printf("using configuration from '%s'", kubeconfig)
+		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+	}*/
+
+
 	if err != nil {
 		klog.Fatal(err)
+	}
+
+	v1alpha1.AddToScheme(scheme.Scheme)
+
+	crdConfig := *config
+	crdConfig.ContentConfig.GroupVersion = &schema.GroupVersion{Group: v1alpha1.GroupName, Version: v1alpha1.GroupVersion}
+	crdConfig.APIPath = "/apis"
+	crdConfig.NegotiatedSerializer = serializer.NewCodecFactory(scheme.Scheme)
+	crdConfig.UserAgent = rest.DefaultKubernetesUserAgent()
+
+	exampleRestClient, err := rest.UnversionedRESTClientFor(&crdConfig)
+	if err != nil {
+		panic(err)
 	}
 
 	// creates the clientset
@@ -63,6 +98,8 @@ func main() {
 	)
 
 	controller := NewController(queue, informer)
+
+
 
 	// Now let's start the controller
 	stop := make(chan struct{})
