@@ -1,5 +1,5 @@
 package arithmeticop
 
 const (
-	GroupName = "maths.tatacommunications.com"
+	GroupName = "arithmeticopertions.com"
 )

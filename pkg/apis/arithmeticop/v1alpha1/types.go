@@ -21,9 +21,9 @@ type MathResource struct {
 
 // MathResourceSpec is the spec for a Foo resource
 type MathResourceSpec struct {
-	FirstNum int32        `json:"firstNum"`
-	SecondNum int32       `json:"secondNum"`
-	Operation string      `json:"operation"`
+	FirstNum   int32        `json:"firstNum"`
+	SecondNum  int32       `json:"secondNum"`
+	Operation  string      `json:"operation"`
 
 }
 
