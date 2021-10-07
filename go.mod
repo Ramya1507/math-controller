@@ -1,4 +1,4 @@
-module controller
+module math-controller
 
 go 1.17
 
