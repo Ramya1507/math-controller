@@ -20,7 +20,7 @@ package versioned
 
 import (
 	"fmt"
-	mathsv1alpha1 "math-controller/pkg/client/clientset/versioned/typed/arithmeticop/v1alpha1"
+	mathsv1alpha1 "math-controller/pkg/client/clientset/versioned/typed/maths/v1alpha1"
 
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"

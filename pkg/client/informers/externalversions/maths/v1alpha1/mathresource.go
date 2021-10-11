@@ -20,10 +20,10 @@ package v1alpha1
 
 import (
 	"context"
-	arithmeticopv1alpha1 "math-controller/pkg/apis/arithmeticop/v1alpha1"
+	mathsv1alpha1 "math-controller/pkg/apis/maths/v1alpha1"
 	versioned "math-controller/pkg/client/clientset/versioned"
 	internalinterfaces "math-controller/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "math-controller/pkg/client/listers/arithmeticop/v1alpha1"
+	v1alpha1 "math-controller/pkg/client/listers/maths/v1alpha1"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -71,7 +71,7 @@ func NewFilteredMathResourceInformer(client versioned.Interface, namespace strin
 				return client.MathsV1alpha1().MathResources(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&arithmeticopv1alpha1.MathResource{},
+		&mathsv1alpha1.MathResource{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,7 +82,7 @@ func (f *mathResourceInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *mathResourceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&arithmeticopv1alpha1.MathResource{}, f.defaultInformer)
+	return f.factory.InformerFor(&mathsv1alpha1.MathResource{}, f.defaultInformer)
 }
 
 func (f *mathResourceInformer) Lister() v1alpha1.MathResourceLister {

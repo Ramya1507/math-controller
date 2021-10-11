@@ -20,7 +20,7 @@ package v1alpha1
 
 import (
 	"context"
-	v1alpha1 "math-controller/pkg/apis/arithmeticop/v1alpha1"
+	v1alpha1 "math-controller/pkg/apis/maths/v1alpha1"
 	scheme "math-controller/pkg/client/clientset/versioned/scheme"
 	"time"
 
