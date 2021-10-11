@@ -10,16 +10,3 @@ spec:
       plural: arithmeticoperations
       singular: arithmeticoperation
       kind: Arithmeticoperation
-    validation:
-      openAPIV3Schema:
-        required: [ "spec" ]
-        properties:
-          spec:
-            required: [ "firstNum","secondNum","operation" ]
-            properties:
-              firstNum:
-                type: "int32"
-              secondNum:
-                type: "int32"
-              operation:
-                type: "string"
