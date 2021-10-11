@@ -20,8 +20,8 @@ package fake
 
 import (
 	clientset "math-controller/pkg/client/clientset/versioned"
-	arithmeticoperationsv1alpha1 "math-controller/pkg/client/clientset/versioned/typed/mathresource/v1alpha1"
-	fakearithmeticoperationsv1alpha1 "math-controller/pkg/client/clientset/versioned/typed/mathresource/v1alpha1/fake"
+	arithmeticoperationsv1alpha1 "math-controller/pkg/client/clientset/versioned/typed/arithmeticop/v1alpha1"
+	fakearithmeticoperationsv1alpha1 "math-controller/pkg/client/clientset/versioned/typed/arithmeticop/v1alpha1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"

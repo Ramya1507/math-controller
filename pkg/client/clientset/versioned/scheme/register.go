@@ -19,7 +19,7 @@ limitations under the License.
 package scheme
 
 import (
-	arithmeticoperationsv1alpha1 "math-controller/pkg/apis/mathresource/v1alpha1"
+	arithmeticoperationsv1alpha1 "math-controller/pkg/apis/arithmeticop/v1alpha1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"

@@ -20,8 +20,8 @@ package externalversions
 
 import (
 	versioned "math-controller/pkg/client/clientset/versioned"
+	arithmeticop "math-controller/pkg/client/informers/externalversions/arithmeticop"
 	internalinterfaces "math-controller/pkg/client/informers/externalversions/internalinterfaces"
-	mathresource "math-controller/pkg/client/informers/externalversions/mathresource"
 	reflect "reflect"
 	sync "sync"
 	time "time"
@@ -172,9 +172,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Arithmeticoperations() mathresource.Interface
+	Arithmeticoperations() arithmeticop.Interface
 }
 
-func (f *sharedInformerFactory) Arithmeticoperations() mathresource.Interface {
-	return mathresource.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Arithmeticoperations() arithmeticop.Interface {
+	return arithmeticop.New(f, f.namespace, f.tweakListOptions)
 }
