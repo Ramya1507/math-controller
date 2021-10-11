@@ -56,7 +56,7 @@ type mathResources struct {
 }
 
 // newMathResources returns a MathResources
-func newMathResources(c *ArithmeticoperationsV1alpha1Client, namespace string) *mathResources {
+func newMathResources(c *MathsV1alpha1Client, namespace string) *mathResources {
 	return &mathResources{
 		client: c.RESTClient(),
 		ns:     namespace,

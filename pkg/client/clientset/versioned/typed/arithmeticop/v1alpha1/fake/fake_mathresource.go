@@ -32,13 +32,13 @@ import (
 
 // FakeMathResources implements MathResourceInterface
 type FakeMathResources struct {
-	Fake *FakeArithmeticoperationsV1alpha1
+	Fake *FakeMathsV1alpha1
 	ns   string
 }
 
-var mathresourcesResource = schema.GroupVersionResource{Group: "arithmeticoperations.com", Version: "v1alpha1", Resource: "mathresources"}
+var mathresourcesResource = schema.GroupVersionResource{Group: "maths.tatacommunications.com", Version: "v1alpha1", Resource: "mathresources"}
 
-var mathresourcesKind = schema.GroupVersionKind{Group: "arithmeticoperations.com", Version: "v1alpha1", Kind: "MathResource"}
+var mathresourcesKind = schema.GroupVersionKind{Group: "maths.tatacommunications.com", Version: "v1alpha1", Kind: "MathResource"}
 
 // Get takes name of the mathResource, and returns the corresponding mathResource object, and an error if there is any.
 func (c *FakeMathResources) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.MathResource, err error) {

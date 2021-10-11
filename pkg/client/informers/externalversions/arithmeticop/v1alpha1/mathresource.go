@@ -62,13 +62,13 @@ func NewFilteredMathResourceInformer(client versioned.Interface, namespace strin
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ArithmeticoperationsV1alpha1().MathResources(namespace).List(context.TODO(), options)
+				return client.MathsV1alpha1().MathResources(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ArithmeticoperationsV1alpha1().MathResources(namespace).Watch(context.TODO(), options)
+				return client.MathsV1alpha1().MathResources(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&arithmeticopv1alpha1.MathResource{},

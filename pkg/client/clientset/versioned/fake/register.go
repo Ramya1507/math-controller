@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	arithmeticoperationsv1alpha1 "math-controller/pkg/apis/arithmeticop/v1alpha1"
+	mathsv1alpha1 "math-controller/pkg/apis/arithmeticop/v1alpha1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -32,7 +32,7 @@ var scheme = runtime.NewScheme()
 var codecs = serializer.NewCodecFactory(scheme)
 
 var localSchemeBuilder = runtime.SchemeBuilder{
-	arithmeticoperationsv1alpha1.AddToScheme,
+	mathsv1alpha1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

@@ -9,7 +9,7 @@ import (
 
 // SchemeGroupVersion is group version used to register these objects
 var SchemeGroupVersion = schema.GroupVersion{
-	Group: "arithemticoperations.com",
+	Group: "maths.tatacommunications.com",
 	Version: "v1alpha1" ,
 }
 

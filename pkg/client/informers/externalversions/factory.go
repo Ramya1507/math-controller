@@ -172,9 +172,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Arithmeticoperations() arithmeticop.Interface
+	Maths() arithmeticop.Interface
 }
 
-func (f *sharedInformerFactory) Arithmeticoperations() arithmeticop.Interface {
+func (f *sharedInformerFactory) Maths() arithmeticop.Interface {
 	return arithmeticop.New(f, f.namespace, f.tweakListOptions)
 }

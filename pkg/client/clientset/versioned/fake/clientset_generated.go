@@ -20,8 +20,8 @@ package fake
 
 import (
 	clientset "math-controller/pkg/client/clientset/versioned"
-	arithmeticoperationsv1alpha1 "math-controller/pkg/client/clientset/versioned/typed/arithmeticop/v1alpha1"
-	fakearithmeticoperationsv1alpha1 "math-controller/pkg/client/clientset/versioned/typed/arithmeticop/v1alpha1/fake"
+	mathsv1alpha1 "math-controller/pkg/client/clientset/versioned/typed/arithmeticop/v1alpha1"
+	fakemathsv1alpha1 "math-controller/pkg/client/clientset/versioned/typed/arithmeticop/v1alpha1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
@@ -80,7 +80,7 @@ var (
 	_ testing.FakeClient  = &Clientset{}
 )
 
-// ArithmeticoperationsV1alpha1 retrieves the ArithmeticoperationsV1alpha1Client
-func (c *Clientset) ArithmeticoperationsV1alpha1() arithmeticoperationsv1alpha1.ArithmeticoperationsV1alpha1Interface {
-	return &fakearithmeticoperationsv1alpha1.FakeArithmeticoperationsV1alpha1{Fake: &c.Fake}
+// MathsV1alpha1 retrieves the MathsV1alpha1Client
+func (c *Clientset) MathsV1alpha1() mathsv1alpha1.MathsV1alpha1Interface {
+	return &fakemathsv1alpha1.FakeMathsV1alpha1{Fake: &c.Fake}
 }
