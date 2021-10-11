@@ -1,5 +1,5 @@
 apiVersion:  maths.tatacommunications.com/v1alpha1
-kind: Arithmeticoperation
+kind: MathResource
 metadata:
   name: addition
   namespace: default
