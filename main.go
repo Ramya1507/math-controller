@@ -55,6 +55,7 @@ func main() {
 		klog.Fatal(err)
 	}
 
+
 	mathInformerFactory := informers.NewSharedInformerFactory(mathClient, time.Second*30)
 
 	controller := NewController(kubeClient,mathClient, mathInformerFactory.Maths().V1alpha1().MathResources())
@@ -62,7 +63,8 @@ func main() {
 
 
 	// Now let's start the controller
-	//stop := make(chan struct{},2)
+
+
 
 	mathInformerFactory.Start(stopCh)
 

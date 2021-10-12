@@ -1,134 +1,198 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/runtime"
-	v1 "k8s.io/client-go/applyconfigurations/core/v1"
 	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	appsinformers "k8s.io/client-go/informers/apps/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	appslisters "k8s.io/client-go/listers/apps/v1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
+
+	mathsv1alpha1 "math-controller/pkg/apis/maths/v1alpha1"
+	clientset      "math-controller/pkg/client/clientset/versioned"
+	mathresourcescheme   "math-controller/pkg/client/clientset/versioned/scheme"
+	informers      "math-controller/pkg/client/informers/externalversions/maths/v1alpha1"
+	listers        "maths-controller/pkg/client/listers/maths/v1alpha1"
 )
+const controllerAgentName = "math-controller"
 
 type Controller struct {
-	queue    workqueue.RateLimitingInterface
-	informer cache.SharedIndexInformer
-}
-func NewController(queue workqueue.RateLimitingInterface, informer cache.SharedIndexInformer) *Controller {
+	kubeclientset kubernetes.Interface
 
-	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	mathclientset clientset.Interface
+
+	mathresourcesLister listers.MathResourceLister
+	mathresourcesSynced cache.InformerSynced
+
+	workqueue workqueue.RateLimitingInterface
+	informer cache.SharedIndexInformer
+
+	recorder record.EventRecorder
+}
+func NewController(
+	kubeclientset kubernetes.Interface,mathclientset clientset.Interface,
+	mathResourceInformer informers.MathResourceInformer) *Controller {
+
+	utilruntime.Must(mathresourcescheme.AddToScheme(scheme.Scheme))
+	glog.V(4).Info("Creating event broadcaster")
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(glog.Infof)
+	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeclientset.CoreV1().Events("")})
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
+
+	controller := &Controller{
+		kubeclientset:    kubeclientset,
+		mathclientset:    mathclientset,
+		mathresourcesLister:   mathResourceInformer.Lister(),
+		mathresourcesSynced:   mathResourceInformer.Informer().HasSynced,
+		workqueue:        workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "mathresource"),
+		recorder:         recorder,
+	}
+
+	glog.Info("Setting up event handlers")
+	// Set up an event handler for when Student resources change
+	mathResourceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.Add(key)
-			}
-		},
-		UpdateFunc: func(old interface{}, new interface{}) {
-			key, err := cache.MetaNamespaceKeyFunc(new)
-			if err == nil {
-				queue.Add(key)
+				Controller.workqueue.Add(key)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
-				queue.Add(key)
+				Controller.workqueue.Add(key)
 			}
 		},
 	})
 
-	return &Controller{
-		informer: informer,
-		queue:    queue,
-	}
+	return controller
 }
 
 func (c *Controller) processNextItem() bool {
-	// Wait until there is a new item in the working queue
-	key, quit := c.queue.Get()
-	if quit {
+	obj, shutdown := c.workqueue.Get()
+
+	if shutdown {
 		return false
 	}
 
-	defer c.queue.Done(key)
+	err := func(obj interface{}) error {
+		defer c.workqueue.Done(obj)
+		var key string
+		var ok bool
 
-	// Invoke the method containing the business logic
-	err := c.syncToStdout(key.(string))
-	// Handle the error if something went wrong during the execution of the business logic
-	c.handleErr(err, key)
+		if key, ok = obj.(string); !ok {
+
+			c.workqueue.Forget(obj)
+			utilruntime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
+			return nil
+		}
+		if err := c.syncHandler(key); err != nil {
+			c.workqueue.AddRateLimited(key)
+			return fmt.Errorf("error syncing '%s': %s, requeuing", key, err.Error())
+		}
+		c.workqueue.Forget(obj)
+		klog.Infof("Successfully synced '%s'", key)
+		return nil
+	}(obj)
+
+	if err != nil {
+		utilruntime.HandleError(err)
+		return true
+	}
+
 	return true
 }
 
-// syncToStdout is the business logic of the controller. In this controller it simply prints
-// information about the pod to stdout. In case an error happened, it has to simply return the error.
-// The retry logic should not be part of the business logic.
-func (c *Controller) syncToStdout(key string) error {
-	obj, exists, err := c.informer.GetIndexer().GetByKey(key)
+
+func (c *Controller) syncHandler(key string) error {
+	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		klog.Errorf("Fetching object with key %s from store failed with %v", key, err)
+		utilruntime.HandleError(fmt.Errorf("invalid resource key: %s", key))
+		return nil
+	}
+
+	cmath, err := c.mathresourcesLister.MathResources(namespace).Get(name)
+	if err != nil {
+		klog.Errorf("Fetching CRD  with key %s from store failed with %v", key, err)
 		return err
 	}
 
-	if !exists {
-		// Below we will warm up our cache with a Pod, so that we will see a delete for one pod
-		fmt.Printf("Pod %s does not exist anymore\n", key)
+	if cmath.Spec.Operation != "" {
+
+		switch cmath.Spec.Operation {
+
+		case ("add"):
+			{
+				fmt.Printf("Operation Addition  value= %d \n", cmath.Spec.FirstNum + cmath.Spec.SecondNum)
+
+			}
+
+		case ("sub"):
+			{
+				fmt.Printf("Operation subtraction value= %d \n", cmath.Spec.FirstNum - cmath.Spec.SecondNum)
+
+			}
+		case ("mul"):
+			{
+				fmt.Printf("Operation multiplication  value= %d \n", cmath.Spec.FirstNum * cmath.Spec.SecondNum)
+
+			}
+
+		case ("div"):
+			{
+				fmt.Printf("Operation division value= %d \n", cmath.Spec.FirstNum / cmath.Spec.SecondNum)
+
+			}
+
+		}
+
 	} else {
-		// Note that you also have to check the uid if you have a local controlled resource, which
-		// is dependent on the actual instance, to detect that a Pod was recreated with the same name
-		fmt.Printf("Sync/Add/Update for Pod %s\n", obj.(*v1.Pod).GetName())
+
+		klog.Errorf("Fetching object cmath.Spec.Operation with  key %s from store failed with %v", key, err)
+		return err
+
 	}
+
 	return nil
+
 }
 
-// handleErr checks if an error happened and makes sure we will retry later.
-func (c *Controller) handleErr(err error, key interface{}) {
-	if err == nil {
-		// Forget about the #AddRateLimited history of the key on every successful synchronization.
-		// This ensures that future processing of updates for this key is not delayed because of
-		// an outdated error history.
-		c.queue.Forget(key)
-		return
-	}
-
-	// This controller retries 5 times if something goes wrong. After that, it stops trying.
-	if c.queue.NumRequeues(key) < 5 {
-		klog.Infof("Error syncing pod %v: %v", key, err)
-
-		// Re-enqueue the key rate limited. Based on the rate limiter on the
-		// queue and the re-enqueue history, the key will be processed later again.
-		c.queue.AddRateLimited(key)
-		return
-	}
-
-	c.queue.Forget(key)
-	// Report to an external entity that, even after several retries, we could not successfully process this key
-	runtime.HandleError(err)
-	klog.Infof("Dropping pod %q out of the queue: %v", key, err)
-}
 
 func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
-	defer runtime.HandleCrash()
+	defer utilruntime.HandleCrash()
 
 	// Let the workers stop when we are done
-	defer c.queue.ShutDown()
-	klog.Info("Starting Pod controller")
-
-	go c.informer.Run(stopCh)
-
-	// Wait for all involved caches to be synced, before processing items from the queue is started
-	if !cache.WaitForCacheSync(stopCh, c.informer.HasSynced) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
-		return
+	defer c.workqueue.ShutDown()
+	glog.Info("start controller Business, start a cache data synchronization")
+	if ok := cache.WaitForCacheSync(stopCh, c.studentsSynced); !ok {
+		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
+	glog.Info("worker start-up")
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(c.runWorker, time.Second, stopCh)
 	}
 
+	glog.Info("worker Already started")
 	<-stopCh
-	klog.Info("Stopping Pod controller")
+	glog.Info("worker It's already over.")
+
+	return nil
+
 }
 
 func (c *Controller) runWorker() {
