@@ -2,10 +2,15 @@ package main
 
 import (
 	"context"
-	"controller/pkg/apis/arithmeticop/v1alpha1"
 	"flag"
 	"log"
 	"path/filepath"
+	"time"
+
+	clientset "math-controller/pkg/client/clientset/versioned"
+
+	informers "math-controller/pkg/client/informers/externalversions"
+	"math-controller/pkg/signals"
 
 	api_v1 "k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,95 +22,53 @@ import (
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 )
 
-var kubeconfig string
+var kubeconfig *string
+
 func main() {
 
-	var config *rest.Config
-	var err error
-	//var master string
+	stopCh := signals.SetupSignalHandler()
 
-	home := homedir.HomeDir()
-
-    kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-
-	//flag.StringVar(&kubeconfig, "kubeconfig", "", "path to Kubernetes config file")
-	//flag.Parse()
-
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	}
+	flag.Parse()
 	// creates the connection
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 
-
-	/*if kubeconfig == "" {
-		log.Printf("using in-cluster configuration")
-		config, err = rest.InClusterConfig()
-	} else {
-		log.Printf("using configuration from '%s'", kubeconfig)
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-	}*/
-
-
 	if err != nil {
 		klog.Fatal(err)
 	}
-
-	v1alpha1.AddToScheme(scheme.Scheme)
-
-	crdConfig := *config
-	crdConfig.ContentConfig.GroupVersion = &schema.GroupVersion{Group: v1alpha1.GroupName, Version: v1alpha1.GroupVersion}
-	crdConfig.APIPath = "/apis"
-	crdConfig.NegotiatedSerializer = serializer.NewCodecFactory(scheme.Scheme)
-	crdConfig.UserAgent = rest.DefaultKubernetesUserAgent()
-
-	exampleRestClient, err := rest.UnversionedRESTClientFor(&crdConfig)
-	if err != nil {
-		panic(err)
-	}
+	
 
 	// creates the clientset
-	clientset, err := kubernetes.NewForConfig(config)
+	kubeClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		klog.Fatal(err)
 	}
 
-	ctx := context.Background()
-	// create the workqueue
-	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
+	mathClient, err := clientset.NewForConfig(config)
+	if err != nil {
+		klog.Fatal(err)
+	}
 
-	// Bind the workqueue to a cache with the help of an informer. This way we make sure that
-	// whenever the cache is updated, the pod key is added to the workqueue.
-	// Note that when we finally process the item from the workqueue, we might see a newer version
-	// of the Pod than the version which was responsible for triggering the update.
-	informer := cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
-				return clientset.CoreV1().Pods(meta_v1.NamespaceAll).List(ctx, options)
-			},
-			WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
-				return clientset.CoreV1().Pods(meta_v1.NamespaceAll).Watch(ctx, options)
-			},
-		},
-		&api_v1.Pod{},
-		0, //Skip resync
-		cache.Indexers{},
-	)
+	mathInformerFactory := informers.NewSharedInformerFactory(mathClient, time.Second*30)
 
-	controller := NewController(queue, informer)
+	controller := NewController(kubeClient,mathClient, mathInformerFactory.Maths().V1alpha1().MathResources())
 
 
 
 	// Now let's start the controller
-	stop := make(chan struct{})
-	defer close(stop)
-	go controller.Run(1, stop)
+	//stop := make(chan struct{},2)
 
-	// Wait forever
-	select {}
+	mathInformerFactory.Start(stopCh)
+
+	if err = controller.Run(2, stopCh); err != nil {
+		klog.Fatalf("Error running controller: %s", err.Error())
+	}
+
+
 }
