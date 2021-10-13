@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"k8s.io/apimachinery/pkg/api/errors"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -14,7 +16,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
-        "k8s.io/klog/v2"        
+	"k8s.io/klog/v2"
 
 	clientset      "math-controller/pkg/client/clientset/versioned"
 	mathresourcescheme   "math-controller/pkg/client/clientset/versioned/scheme"
@@ -59,18 +61,11 @@ func NewController(
 	glog.Info("Setting up event handlers")
 	// Set up an event handler for when Student resources change
 	mathResourceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			key, err := cache.MetaNamespaceKeyFunc(obj)
-			if err == nil {
-				controller.workqueue.Add(key)
-			}
+		AddFunc: controller.enqueueMathResource,
+		UpdateFunc: func(old, new interface{}) {
+			controller.enqueueMathResource(new)
 		},
-		DeleteFunc: func(obj interface{}) {
-			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-			if err == nil {
-				controller.workqueue.Add(key)
-			}
-		},
+		DeleteFunc: controller.enqueueMathResourceForDelete,
 	})
 
 	return controller
@@ -166,7 +161,7 @@ func (c *Controller) syncHandler(key string) error {
 }
 
 
-func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
+func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) error {
 	defer utilruntime.HandleCrash()
 
 	// Let the workers stop when we are done
@@ -192,4 +187,31 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 func (c *Controller) runWorker() {
 	for c.processNextItem() {
 	}
+}
+
+func (c *Controller) enqueueMathResource(obj interface{}) {
+	var key string
+	var err error
+	// Cache objects
+	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
+		runtime.HandleError(err)
+		return
+	}
+
+	// Queue key s
+	c.workqueue.AddRateLimited(key)
+}
+
+// Delete operation
+func (c *Controller) enqueueMathResourceForDelete(obj interface{}) {
+	var key string
+	var err error
+	// Delete the specified object from the cache
+	key, err = cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
+	if err != nil {
+		runtime.HandleError(err)
+		return
+	}
+	//Queue the key again
+	c.workqueue.AddRateLimited(key)
 }
