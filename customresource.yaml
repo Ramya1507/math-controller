@@ -4,9 +4,9 @@ metadata:
   name: mathresources.maths.tatacommunications.com
 spec:
   group:  maths.tatacommunications.com
-  version: "v1alpha1"
-    scope: Namespaced
-    names:
+  version: v1alpha1
+  scope: Namespaced
+  names:
       plural: mathresources
       singular: mathresource
       kind: MathResource
