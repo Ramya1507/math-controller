@@ -25,7 +25,7 @@ import (
 	clientset      "math-controller/pkg/client/clientset/versioned"
 	mathresourcescheme   "math-controller/pkg/client/clientset/versioned/scheme"
 	informers      "math-controller/pkg/client/informers/externalversions/maths/v1alpha1"
-	listers        "maths-controller/pkg/client/listers/maths/v1alpha1"
+	listers        "math-controller/pkg/client/listers/maths/v1alpha1"
 )
 const controllerAgentName = "math-controller"
 

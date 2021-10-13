@@ -7,3 +7,11 @@ spec:
   firstNum: 8
   secondNum: 9
   operation: add
+
+ /* go get k8s.io/client-go/kubernetes/scheme \
+  && go get github.com/golang/glog \
+  && go get k8s.io/kube-openapi/pkg/util/proto \
+  && go get k8s.io/utils/buffer \
+  && go get k8s.io/utils/integer \
+  && go get k8s.io/utils/trace
+*/
