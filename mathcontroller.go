@@ -6,8 +6,6 @@ import (
 
 	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -17,7 +15,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 
-	mathsv1alpha1 "math-controller/pkg/apis/maths/v1alpha1"
 	clientset      "math-controller/pkg/client/clientset/versioned"
 	mathresourcescheme   "math-controller/pkg/client/clientset/versioned/scheme"
 	informers      "math-controller/pkg/client/informers/externalversions/maths/v1alpha1"
@@ -168,7 +165,7 @@ func (c *Controller) syncHandler(key string) error {
 }
 
 
-func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
+func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
 
 	// Let the workers stop when we are done
