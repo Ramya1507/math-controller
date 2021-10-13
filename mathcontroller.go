@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
+        "k8s.io/klog/v2"        
 
 	clientset      "math-controller/pkg/client/clientset/versioned"
 	mathresourcescheme   "math-controller/pkg/client/clientset/versioned/scheme"
@@ -61,13 +62,13 @@ func NewController(
 		AddFunc: func(obj interface{}) {
 			key, err := cache.MetaNamespaceKeyFunc(obj)
 			if err == nil {
-				Controller.workqueue.Add(key)
+				controller.workqueue.Add(key)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 			if err == nil {
-				Controller.workqueue.Add(key)
+				controller.workqueue.Add(key)
 			}
 		},
 	})
@@ -171,7 +172,7 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 	// Let the workers stop when we are done
 	defer c.workqueue.ShutDown()
 	glog.Info("start controller Business, start a cache data synchronization")
-	if ok := cache.WaitForCacheSync(stopCh, c.studentsSynced); !ok {
+	if ok := cache.WaitForCacheSync(stopCh, c.mathresourcesSynced); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
