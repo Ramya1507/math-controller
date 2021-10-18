@@ -1,0 +1,9 @@
+apiVersion:  maths.tatacommunications.com/v1alpha1
+kind: MathResource
+metadata:
+  name: subtraction
+  namespace: default
+spec:
+  firstNum: 15
+  secondNum: 9
+  operation: sub

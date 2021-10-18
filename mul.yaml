@@ -1,0 +1,9 @@
+apiVersion:  maths.tatacommunications.com/v1alpha1
+kind: MathResource
+metadata:
+  name: multiplication
+  namespace: default
+spec:
+  firstNum: 8
+  secondNum: 9
+  operation: mul

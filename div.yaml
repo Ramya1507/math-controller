@@ -1,0 +1,9 @@
+apiVersion:  maths.tatacommunications.com/v1alpha1
+kind: MathResource
+metadata:
+  name: division
+  namespace: default
+spec:
+  firstNum: 16
+  secondNum: 4
+  operation: div
