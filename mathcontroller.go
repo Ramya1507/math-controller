@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/glog"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -42,7 +42,7 @@ func NewController(
 	mathResourceInformer informers.MathResourceInformer) *Controller {
 
 	utilruntime.Must(mathresourcescheme.AddToScheme(scheme.Scheme))
-	glog.V(4).Info("Creating event broadcaster")
+	klog.V(4).Info("Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeclientset.CoreV1().Events("")})
@@ -57,7 +57,7 @@ func NewController(
 		recorder:         recorder,
 	}
 
-	glog.Info("Setting up event handlers")
+	klog.Info("Setting up event handlers")
 	// Set up an event handler for when Student resources change
 	mathResourceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.enqueueMathResource,
@@ -85,12 +85,12 @@ func (c *Controller) processNextItem() bool {
 		if key, ok = obj.(string); !ok {
 
 			c.workqueue.Forget(obj)
-			utilruntime.HandleError(fmt.Errorf("expected string in workqueue but got %#v", obj))
+			utilruntime.HandleError(klog.Errorf("expected string in workqueue but got %#v", obj))
 			return nil
 		}
 		if err := c.syncHandler(key); err != nil {
 			c.workqueue.AddRateLimited(key)
-			return fmt.Errorf("error syncing '%s': %s, requeuing", key, err.Error())
+			return klog.Errorf("error syncing '%s': %s, requeuing", key, err.Error())
 		}
 		c.workqueue.Forget(obj)
 		klog.Infof("Successfully synced '%s'", key)
@@ -125,24 +125,24 @@ func (c *Controller) syncHandler(key string) error {
 
 		case ("add"):
 			{
-				fmt.Printf("Operation Addition  value= %d \n", cmath.Spec.FirstNum + cmath.Spec.SecondNum)
+				klog.Infof("Operation Addition  value= %d \n", cmath.Spec.FirstNum + cmath.Spec.SecondNum)
 
 			}
 
 		case ("sub"):
 			{
-				fmt.Printf("Operation subtraction value= %d \n", cmath.Spec.FirstNum - cmath.Spec.SecondNum)
+				klog.Infof("Operation subtraction value= %d \n", cmath.Spec.FirstNum - cmath.Spec.SecondNum)
 
 			}
 		case ("mul"):
 			{
-				fmt.Printf("Operation multiplication  value= %d \n", cmath.Spec.FirstNum * cmath.Spec.SecondNum)
+				klog.Infof("Operation multiplication  value= %d \n", cmath.Spec.FirstNum * cmath.Spec.SecondNum)
 
 			}
 
 		case ("div"):
 			{
-				fmt.Printf("Operation division value= %d \n", cmath.Spec.FirstNum / cmath.Spec.SecondNum)
+				klog.Infof("Operation division value= %d \n", cmath.Spec.FirstNum / cmath.Spec.SecondNum)
 
 			}
 
@@ -165,19 +165,19 @@ func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) error {
 
 	// Let the workers stop when we are done
 	defer c.workqueue.ShutDown()
-	glog.Info("start controller Business, start a cache data synchronization")
+	klog.Info("start controller Business, start a cache data synchronization")
 	if ok := cache.WaitForCacheSync(stopCh, c.mathresourcesSynced); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
-	glog.Info("worker start-up")
+	klog.Infof("worker start-up")
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(c.runWorker, time.Second, stopCh)
 	}
 
-	glog.Info("worker Already started")
+	klog.Info("worker Already started")
 	<-stopCh
-	glog.Info("worker It's already over.")
+	klog.Info("worker It's already over.")
 
 	return nil
 

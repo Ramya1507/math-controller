@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 	"path/filepath"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	informers "math-controller/pkg/client/informers/externalversions"
 	"math-controller/pkg/signals"
 
-	"github.com/golang/glog"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -62,7 +62,7 @@ func main() {
 	mathInformerFactory.Start(stopCh)
 
 	if err = controller.Run(2, stopCh); err != nil {
-		glog.Fatalf("Error running controller: %s", err.Error())
+		klog.Fatalf("Error running controller: %s", err.Error())
 	}
 
 
