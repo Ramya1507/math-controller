@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"log"
+	
 	"path/filepath"
 	"time"
 
