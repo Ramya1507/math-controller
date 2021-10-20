@@ -1,3 +1,4 @@
+#syntax
 FROM golang:1.16-alpine
 WORKDIR /controller
 COPY go.mod ./
