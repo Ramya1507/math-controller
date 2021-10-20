@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+  "reflect"
 
 
 	corev1 "k8s.io/api/core/v1"
@@ -17,6 +18,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
 
+  maths          "math-controller/pkg/apis/maths/v1alpha1"
 	clientset      "math-controller/pkg/client/clientset/versioned"
 	mathresourcescheme   "math-controller/pkg/client/clientset/versioned/scheme"
 	informers      "math-controller/pkg/client/informers/externalversions/maths/v1alpha1"
@@ -62,8 +64,14 @@ func NewController(
 	mathResourceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: controller.enqueueMathResource,
 		UpdateFunc: func(old, new interface{}) {
-			controller.enqueueMathResource(new)
-		},
+        newMath := new.(*maths.MathResource)
+        oldMath := old.(*maths.MathResource)
+        if reflect.DeepEqual(newMath.Spec, oldMath.Spec) {
+        klog.V(4).Info("Specs not modified. Ignoring update event")
+        return
+       }
+    controller.enqueueMathResource(new)
+    },
 		DeleteFunc: controller.enqueueMathResourceForDelete,
 	})
 
@@ -93,7 +101,7 @@ func (c *Controller) processNextItem() bool {
 			return fmt.Errorf("error syncing '%s': %s, requeuing", key, err.Error())
 		}
 		c.workqueue.Forget(obj)
-		klog.Infof("Successfully synced '%s'", key)
+		//klog.Infof("Successfully synced '%s'", key)
 		return nil
 	}(obj)
 
@@ -142,7 +150,11 @@ func (c *Controller) syncHandler(key string) error {
 
 		case ("div"):
 			{
+        if(cmath.Spec.SecondNum > 0){
 				klog.Infof("Operation division value= %d \n", cmath.Spec.FirstNum / cmath.Spec.SecondNum)
+        }else {
+        klog.Errorf(" second num should be greater than zero")
+        }
 
 			}
 

@@ -17,7 +17,6 @@ spec:
     spec:
       containers:
         - name:  controller
-          image: ramya1507/mathcontroller:v1
-          ports:
-            - containerPort: 8088
+          image: ramya1507/mathcontroller:v2
+          
           
