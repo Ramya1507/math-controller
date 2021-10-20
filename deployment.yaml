@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: math-controller
+  labels:
+    app: math
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: math
+  template:
+    metadata:
+      labels:
+        app: math
+    spec:
+      containers:
+        - name:  controller
+          image: ramya1507/mathcontroller:v1
+          ports:
+            - containerPort: 8088
+          
