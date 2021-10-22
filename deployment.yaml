@@ -17,6 +17,6 @@ spec:
     spec:
       containers:
         - name:  controller
-          image: ramya1507/mathcontroller:v2
+          image: ramya1507/mathcontroller:v3
           
           

@@ -6,15 +6,15 @@ import (
   "reflect"
 
 
-	corev1 "k8s.io/api/core/v1"
+//	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+//	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
+	//"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
 
@@ -24,7 +24,7 @@ import (
 	informers      "math-controller/pkg/client/informers/externalversions/maths/v1alpha1"
 	listers        "math-controller/pkg/client/listers/maths/v1alpha1"
 )
-const controllerAgentName = "math-controller"
+//const controllerAgentName = "math-controller"
 
 type Controller struct {
 	kubeclientset kubernetes.Interface
@@ -37,18 +37,18 @@ type Controller struct {
 	workqueue workqueue.RateLimitingInterface
 	informer cache.SharedIndexInformer
 
-	recorder record.EventRecorder
+	//recorder record.EventRecorder
 }
 func NewController(
 	kubeclientset kubernetes.Interface,mathclientset clientset.Interface,
 	mathResourceInformer informers.MathResourceInformer) *Controller {
 
 	utilruntime.Must(mathresourcescheme.AddToScheme(scheme.Scheme))
-	klog.V(4).Info("Creating event broadcaster")
+/*	klog.V(4).Info("Creating event broadcaster")
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(klog.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeclientset.CoreV1().Events("")})
-	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})*/
 
 	controller := &Controller{
 		kubeclientset:    kubeclientset,
@@ -56,7 +56,7 @@ func NewController(
 		mathresourcesLister:   mathResourceInformer.Lister(),
 		mathresourcesSynced:   mathResourceInformer.Informer().HasSynced,
 		workqueue:        workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "mathresource"),
-		recorder:         recorder,
+	//	recorder:         recorder,
 	}
 
 	klog.Info("Setting up event handlers")
