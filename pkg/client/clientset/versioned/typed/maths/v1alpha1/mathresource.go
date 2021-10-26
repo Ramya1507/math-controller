@@ -40,6 +40,7 @@ type MathResourcesGetter interface {
 type MathResourceInterface interface {
 	Create(ctx context.Context, mathResource *v1alpha1.MathResource, opts v1.CreateOptions) (*v1alpha1.MathResource, error)
 	Update(ctx context.Context, mathResource *v1alpha1.MathResource, opts v1.UpdateOptions) (*v1alpha1.MathResource, error)
+	UpdateStatus(ctx context.Context, mathResource *v1alpha1.MathResource, opts v1.UpdateOptions) (*v1alpha1.MathResource, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.MathResource, error)
@@ -128,6 +129,22 @@ func (c *mathResources) Update(ctx context.Context, mathResource *v1alpha1.MathR
 		Namespace(c.ns).
 		Resource("mathresources").
 		Name(mathResource.Name).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(mathResource).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+func (c *mathResources) UpdateStatus(ctx context.Context, mathResource *v1alpha1.MathResource, opts v1.UpdateOptions) (result *v1alpha1.MathResource, err error) {
+	result = &v1alpha1.MathResource{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("mathresources").
+		Name(mathResource.Name).
+		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(mathResource).
 		Do(ctx).

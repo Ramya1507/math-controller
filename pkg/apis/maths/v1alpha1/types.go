@@ -16,7 +16,7 @@ type MathResource struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   MathResourceSpec   `json:"spec"`
-
+  Status MathResourceStatus `json:"status"`
 }
 
 // MathResourceSpec is the spec for a custom resource
@@ -25,6 +25,11 @@ type MathResourceSpec struct {
 	SecondNum  int32       `json:"secondNum"`
 	Operation  string      `json:"operation"`
 
+}
+
+type MathResourceStatus struct {
+	State   string `json:"state"`
+	Message string `json:"message"`
 }
 
 

@@ -102,6 +102,18 @@ func (c *FakeMathResources) Update(ctx context.Context, mathResource *v1alpha1.M
 	return obj.(*v1alpha1.MathResource), err
 }
 
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+func (c *FakeMathResources) UpdateStatus(ctx context.Context, mathResource *v1alpha1.MathResource, opts v1.UpdateOptions) (*v1alpha1.MathResource, error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(mathresourcesResource, "status", c.ns, mathResource), &v1alpha1.MathResource{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.MathResource), err
+}
+
 // Delete takes name of the mathResource and deletes it. Returns an error if one occurs.
 func (c *FakeMathResources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.

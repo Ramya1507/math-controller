@@ -6,6 +6,8 @@ spec:
   group:  maths.tatacommunications.com
   version: v1alpha1
   scope: Namespaced
+  subresources:
+      status: {}
   names:
       plural: mathresources
       singular: mathresource
