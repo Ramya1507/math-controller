@@ -18,3 +18,4 @@ bash "${CODEGEN_PKG}"/generate-groups.sh "deepcopy,client,informer,lister" \
 
 # To use your own boilerplate text append:
 #   --go-header-file "${SCRIcd hackPT_ROOT}"/hack/custom-boilerplate.go.txt
+# ./code-generator/generate-groups.sh all math-controller/pkg/client math-controller/pkg/apis mathresource:v1alpha1 --go-header-file code-generator/hack/boilerplate.go.txt --output-base ..
